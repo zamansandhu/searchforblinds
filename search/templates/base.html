@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Search Engine</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+{% block head %}
+{% endblock %}
+</head>
+<style>
+  .row{
+    margin-left:0px;
+    margin-right:0px;
+  }
+</style>
+ {% block style %}
+ {% endblock %}
+<body style="width:100%;">
+            <div class="row" style="width:100%;">
+                <div class="col-sm-12 text-center head ">
+                            <h3>Search Engine</h3>
+                </div>
+            </div>
+    {% block content %}
+    {% endblock %}
+</body>
+<script src= "{%static 'script.js' %}"></script>
+</html>
+    

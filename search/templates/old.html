@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="row">
+  <div class="col-sm-3 text-center">
+  </div>
+  <div class="col-sm-4 text-center">
+    <input id="txtSearch"/>
+  </div>
+  <div class="col-sm-1 text-left">
+        <button id="record"></button>
+  </div>
+  <div class="col-sm-2 text-center">
+      <audio id="recordedAudio"></audio>
+  </div>
+</div>
+
+<div class="row" style="height:50px;">
+    <div class="col-sm-3 text-center">
+    </div>
+    <div class="col-sm-6 text-center">
+      <p>
+        <p id='output'>
+        </p>
+      </p>
+    </div>
+    <div class="col-sm-3 text-center">
+    </div>
+</div>
+<div class="row">
+  <div class="col-sm-6 text-center">
+    <h2>Pages</h2>
+    <ul id="pageslist" class="list-group">
+    </ul>
+  </div>
+  <div class="col-sm-6 text-center">
+      <h2>Content</h2>
+      <button id="stopspeech">Stop Speech</button>
+      <p id="contentpara" style="text-align: justify;"> </p>
+  </div>
+</div>
+
+<style>
+  .indent{
+    padding-left:20% !important;
+    text-align: left;
+    list-style-type: none;
+  }
+  #txtSearch{
+    width:100%;
+    margin: 10px;
+    border-radius: 5px;
+  }
+  #record {
+    border: 2px solid red;
+    background-color: red;
+    border-width: medium;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 10px 10px;
+    cursor: pointer;
+    max-width: 50%;
+    max-height: 15%;
+    border-radius: 50%;
+}
+#recordedAudio {
+  position: relative;
+}
+
+.anchor{
+  cursor: pointer;
+}
+.title{
+  text-align: left;
+  margin-left: 10%;
+}
+
+</style>
+<script>
+speechSynthesisInstance = new SpeechSynthesisUtterance();
+window.speechSynthesis.cancel();
+navigator.mediaDevices.getUserMedia({audio:true}).then(stream => {handlerFunction(stream)})
+console.log("page here");
+function handlerFunction(stream) {
+  rec = new MediaRecorder(stream);
+  console.log("recording object created");
+  rec.ondataavailable = e => {
+    console.log(e)
+    audioChunks.push(e.data);
+    if (rec.state == "inactive"){
+      let blob = new Blob(audioChunks,{type:'audio/wav'});
+      console.log(blob);
+      recordedAudio.src = URL.createObjectURL(blob);
+      recordedAudio.controls=true;
+      recordedAudio.autoplay=true;
+      document.getElementById('output').innerHTML='audio sent searching for relevent document...';
+      sendData(blob);
+    }
+  }
+}
+document.querySelector('#txtSearch').addEventListener('keypress', function (e) {
+    var key = e.which || e.keyCode;
+    if (key === 13) { // 13 is enter
+      // code for enter
+      text=document.getElementById('txtSearch').value;
+      if(text ==''){
+        document.getElementById('output').innerHTML='No input';
+      }else{
+        document.getElementById('output').innerHTML='searching...';
+        console.log(text);
+        document.getElementById('txtSearch').value="";
+        textsearch(text);
+      }
+    }
+});
+jsonresponse=null;
+function recursivesearch(text){
+  document.getElementById('output').innerHTML="Loading Article" +text;
+  textsearch(text);
+}
+function textsearch(text) {
+  let csrftoken = getCookie('csrftoken');
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      jsonresponse=JSON.parse(this.responseText);
+      showdata(jsonresponse);
+      
+    }
+  };
+  xhttp.open("POST", "{% url 'search:text_request' %}");
+  xhttp.setRequestHeader('X-CSRFToken', csrftoken);
+  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhttp.send(text);
+}
+function showdata(content){
+  window.speechSynthesis.cancel();
+  document.getElementById('output').innerHTML=jsonresponse.pages.length +" pages found";
+  document.getElementById('contentpara').innerHTML="";
+  window.speechSynthesis.cancel();
+  pagesparent=document.getElementById('pageslist');
+  pagesparent.innerHTML="";
+  for(i=0;i<jsonresponse.pages.length;i++){
+    currentpage=content.pages[i];
+    mainlist = document.createElement("LI");
+    mainlist.classList.add('list-group-item');
+    mainlist.classList.add('title');
+    titleanchor=document.createElement('a');
+    titleanchor.classList.add('anchor');
+    titleanchor.innerHTML=content.pages[i].title;
+    mainlist.appendChild(titleanchor);
+    categorylist = document.createElement("ul");
+    categorylist.classList.add('list-group');
+    datadiv = document.createElement("div");
+    datadiv.classList.add('collapse');
+    datadiv.appendChild(categorylist);
+    titleanchor.addEventListener("click", toggleshow.bind(this, datadiv), false);
+    mainlist.appendChild(datadiv);
+
+    for(j=0;j<currentpage.categories.length;j++){
+        innerlistelement = document.createElement("LI");
+        innerlistelement.classList.add("indent");
+        inneranchor=document.createElement("a");
+        inneranchor.innerHTML=(j+1)+' - '+currentpage.categories[j].heading;
+        if(currentpage.title=="Related Articles"){
+          inneranchor.addEventListener("click", recursivesearch.bind(this, currentpage.categories[j].heading), false);
+        }else{
+          inneranchor.addEventListener("click", showcontent.bind(this, currentpage.categories[j].content), false);
+        }
+        
+        innerlistelement.classList.add("anchor");
+        innerlistelement.appendChild(inneranchor);
+        categorylist.appendChild(innerlistelement);
+    }
+    pagesparent.appendChild(mainlist);
+
+  }
+
+}
+function toggleshow(datadiv){
+  datadiv.style.display = datadiv.style.display === 'block' ? '' : 'block';
+}
+function showcontent(content){
+  document.getElementById('contentpara').innerHTML=content;
+  window.speechSynthesis.cancel();
+  speechSynthesisInstance.text=content;
+  window.speechSynthesis.speak(speechSynthesisInstance);
+        
+}
+stopspeech.onclick = e => {
+  window.speechSynthesis.cancel();
+}
+function sendData(data) {
+  let csrftoken = getCookie('csrftoken');
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      jsonresponse=JSON.parse(this.responseText);
+      console.log(jsonresponse['pages']);
+      showdata(jsonresponse);
+    }
+  };
+  xhttp.open("POST", "{% url 'search:voice_request' %}");
+  xhttp.setRequestHeader('X-CSRFToken', csrftoken);
+  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhttp.send(data);
+}
+recording=false;
+record.onclick = e => {
+  if(recording == false){
+    console.log('recording starts');
+    recording=true;
+    record.style.borderColor = "black";
+    audioChunks = [];
+    rec.start();
+  }else{
+    console.log('recording stops');
+    recording=false;
+    record.style.borderColor = "red";
+    rec.stop();
+  }
+}
+// https://docs.djangoproject.com/en/dev/ref/csrf/#ajax
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock%}

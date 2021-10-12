@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div id="search" class="row" style="min-height:50px; width:100%;">
+  <div class="col-sm-4 text-center">
+  </div>
+  <div class="col-sm-3 text-center">
+    <input id="txtSearch"/>
+  </div>
+  <div class="col-sm-1 text-left">
+        <button id="record"></button>
+  </div>
+  <div class="col-sm-2 text-center">
+      <p id="msg" style="color: red; font-size: 18px; font-weight: 500; margin-top: 10px;"> </p>
+      <audio id="recordedAudio"></audio>
+  </div>
+  <div class="col-sm-2 text-center">
+    <h3> Short Keys</h3>
+    <div class="list-group text-left">
+      <a href="#" class="list-group-item">Space Bar play pause content</a>
+      <a href="#" class="list-group-item">Insert Key switch view</a>
+      <a href="#" class="list-group-item">Left Right Up Down Key to View Pages</a>
+    </div>
+  </div>
+</div>
+
+<div class="row" style="height:50px; width:100%;">
+    <div class="col-sm-3 text-center">
+    </div>
+    <div class="col-sm-6 text-center">
+      <p>
+        <p id='output'>
+        </p>
+      </p>
+    </div>
+    <div class="col-sm-3 text-center">
+    </div>
+</div>
+<div class="row">
+  <div class="col-sm-6 text-center" id="page">
+    <h2>Pages</h2>
+    <ul id="pageslist" class="list-group">
+    </ul>
+  </div>
+  <div class="col-sm-6 text-center" id="content">
+      <h2>Content</h2>
+      <button id="stopspeech">Stop Speech</button>
+      <p id="contentpara" style="text-align: justify;"> </p>
+  </div>
+</div>
+
+<style>
+  .indent{
+    padding-left:20% !important;
+    text-align: left;
+    list-style-type: none;
+  }
+  #txtSearch{
+    width:100%;
+    margin: 10px;
+    border-radius: 5px;
+  }
+  #record {
+    border: 2px solid red;
+    background-color: red;
+    border-width: medium;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 10px 10px;
+    cursor: pointer;
+    max-width: 50%;
+    max-height: 15%;
+    border-radius: 50%;
+}
+#recordedAudio {
+  position: relative;
+}
+
+.anchor{
+  cursor: pointer;
+}
+.title{
+  text-align: left;
+  margin-left: 10%;
+}
+
+</style>
+{% endblock%}
